@@ -48,7 +48,6 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import onlymash.flexbooru.BuildConfig
 import onlymash.flexbooru.R
 import onlymash.flexbooru.app.Keys.POST_POSITION
 import onlymash.flexbooru.app.Keys.POST_QUERY
@@ -178,7 +177,7 @@ class DetailActivity : PathActivity(),
         val intent = Intent(ACTION_DETAIL_POST_POSITION).apply {
             putExtra(POST_QUERY, post.query)
             putExtra(POST_POSITION, position)
-            setPackage(BuildConfig.APPLICATION_ID)
+            //setPackage(BuildConfig.APPLICATION_ID)
         }
         sendBroadcast(intent)
         if (post.origin.isVideo()) {
@@ -333,22 +332,6 @@ class DetailActivity : PathActivity(),
         }
         favButton.setOnClickListener {
             vote()
-        }
-        if (!Settings.isOrderSuccess) {
-            val adView = AdView(this)
-            binding.bottomShortcut.bottomBarContainer.addView(adView, 0, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
-                gravity = Gravity.CENTER_HORIZONTAL
-            })
-            var adWidth = getScreenWidthDp()
-            if (adWidth > 500) {
-                adWidth = 500
-            }
-            adView.apply {
-                visibility = View.VISIBLE
-                setAdSize(AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(this@DetailActivity, adWidth))
-                adUnitId = "ca-app-pub-1547571472841615/1729907816"
-                loadAd(AdRequest.Builder().build())
-            }
         }
     }
 
@@ -586,7 +569,7 @@ class DetailActivity : PathActivity(),
             try {
                 inputStream = FileInputStream(file)
                 outputSteam = contentResolver.openOutputStream(desUri)
-                inputStream.copyTo(outputSteam)
+                outputSteam?.let {inputStream.copyTo(it)}
                 true
             } catch (_: IOException) {
                 false

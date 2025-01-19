@@ -28,7 +28,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.DrawableRes
 import androidx.annotation.MenuRes
 import androidx.annotation.NavigationRes
-import androidx.appcompat.app.AlertDialog
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.GravityCompat
@@ -52,7 +51,6 @@ import com.mikepenz.materialdrawer.util.removeItems
 import com.mikepenz.materialdrawer.widget.AccountHeaderView
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import onlymash.flexbooru.BuildConfig
 import onlymash.flexbooru.R
 import onlymash.flexbooru.app.Settings.AUTO_HIDE_BOTTOM_BAR_KEY
 import onlymash.flexbooru.app.Settings.BOORU_UID_ACTIVATED_KEY
@@ -180,8 +178,6 @@ class MainActivity : PathActivity(), SharedPreferences.OnSharedPreferenceChangeL
             DRAWER_ITEM_ID_SAUCE_NAO -> toActivity(SauceNaoActivity::class.java)
             DRAWER_ITEM_ID_WHAT_ANIME -> toActivity(WhatAnimeActivity::class.java)
             DRAWER_ITEM_ID_ABOUT -> toActivity(AboutActivity::class.java)
-            DRAWER_ITEM_ID_PURCHASE -> toActivity(PurchaseActivity::class.java)
-            DRAWER_ITEM_ID_PURCHASE_HISTORY -> toActivity(PurchaseHistoryActivity::class.java)
         }
         false
     }
@@ -239,20 +235,8 @@ class MainActivity : PathActivity(), SharedPreferences.OnSharedPreferenceChangeL
 
     private fun initPurchaseItem() {
         val item = drawerSliderView.getDrawerItem(DRAWER_ITEM_ID_PURCHASE)
-        if (isOrderSuccess) {
-            if (item != null) {
-                drawerSliderView.removeItems(DRAWER_ITEM_ID_PURCHASE)
-            }
-        } else if (item == null) {
-            drawerSliderView.addItems(
-                PrimaryDrawerItem().apply {
-                    name = StringHolder(R.string.purchase_title)
-                    icon = createImageHolder(R.drawable.ic_payment_24dp)
-                    isSelectable = false
-                    isIconTinted = true
-                    identifier = DRAWER_ITEM_ID_PURCHASE
-                }
-            )
+        if(item != null) {
+            drawerSliderView.removeItems(DRAWER_ITEM_ID_PURCHASE)
         }
     }
 
@@ -412,31 +396,34 @@ class MainActivity : PathActivity(), SharedPreferences.OnSharedPreferenceChangeL
     }
 
     private fun checkUpdate() {
-        GlobalScope.launch {
-            AppUpdaterApi.checkUpdate()
-        }
-        if (BuildConfig.VERSION_CODE >= latestVersionCode || isFinishing) {
-            return
-        }
-        AlertDialog.Builder(this)
-            .setTitle(R.string.update_found_update)
-            .setMessage(getString(R.string.update_version, latestVersionName))
-            .setPositiveButton(R.string.dialog_update) { _, _ ->
-                if (isGoogleSign && isAvailableOnStore) {
-                    openAppInMarket(applicationContext.packageName)
-                } else {
-                    launchUrl(latestVersionUrl)
-                }
-                finish()
-            }
-            .setNegativeButton(R.string.dialog_exit) { _, _ ->
-                finish()
-            }
-            .create().apply {
-                setCancelable(false)
-                setCanceledOnTouchOutside(false)
-                show()
-            }
+        return;
+
+//        GlobalScope.launch {
+//            AppUpdaterApi.checkUpdate()
+//        }
+        //BuildConfig.VERSION_CODE >= latestVersionCode ||
+//        if (isFinishing) {
+//            return
+//        }
+//        AlertDialog.Builder(this)
+//            .setTitle(R.string.update_found_update)
+//            .setMessage(getString(R.string.update_version, latestVersionName))
+//            .setPositiveButton(R.string.dialog_update) { _, _ ->
+//                if (isGoogleSign && isAvailableOnStore) {
+//                    openAppInMarket(applicationContext.packageName)
+//                } else {
+//                    launchUrl(latestVersionUrl)
+//                }
+//                finish()
+//            }
+//            .setNegativeButton(R.string.dialog_exit) { _, _ ->
+//                finish()
+//            }
+//            .create().apply {
+//                setCancelable(false)
+//                setCanceledOnTouchOutside(false)
+//                show()
+//            }
     }
 
     private fun initDrawerHeader() {

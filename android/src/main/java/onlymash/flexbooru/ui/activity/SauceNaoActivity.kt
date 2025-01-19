@@ -77,11 +77,6 @@ class SauceNaoActivity : BaseActivity() {
     @SuppressLint("NotifyDataSetChanged")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        if (!isOrderSuccess) {
-            startActivity(Intent(this, PurchaseActivity::class.java))
-            finish()
-            return
-        }
         setContentView(binding.root)
         val list = binding.common.list
         val progressBar = binding.common.progress.progressBar

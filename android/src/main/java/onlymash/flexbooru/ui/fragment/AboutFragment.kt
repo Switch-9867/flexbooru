@@ -20,8 +20,6 @@ import android.os.Bundle
 import androidx.core.net.toUri
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
-import com.google.android.gms.oss.licenses.OssLicensesMenuActivity
-import onlymash.flexbooru.BuildConfig
 import onlymash.flexbooru.R
 import onlymash.flexbooru.extension.launchUrl
 import onlymash.flexbooru.extension.openAppInMarket
@@ -31,7 +29,7 @@ import onlymash.flexbooru.ui.activity.CopyrightActivity
 class AboutFragment : PreferenceFragmentCompat() {
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         addPreferencesFromResource(R.xml.pref_about)
-        findPreference<Preference>("about_app_version")?.summary = BuildConfig.VERSION_NAME
+        findPreference<Preference>("about_app_version")?.summary = "null"
     }
     override fun onPreferenceTreeClick(preference: Preference): Boolean {
         when (preference.key) {
@@ -65,12 +63,6 @@ class AboutFragment : PreferenceFragmentCompat() {
             "about_copyright" -> {
                 context?.run {
                     startActivity(Intent(this, CopyrightActivity::class.java))
-                }
-            }
-            "about_licenses" -> {
-                context?.run {
-                    OssLicensesMenuActivity.setActivityTitle("Open Source Licenses")
-                    startActivity(Intent(this, OssLicensesMenuActivity::class.java))
                 }
             }
         }

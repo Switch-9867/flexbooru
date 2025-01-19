@@ -27,30 +27,19 @@ import coil.ImageLoaderFactory
 import coil.disk.DiskCache
 import coil.dispose
 import coil.load
-import com.android.billingclient.api.*
-import com.google.android.gms.ads.MobileAds
-import com.google.android.gms.ads.RequestConfiguration
 import com.google.android.material.color.DynamicColors
 import com.mikepenz.materialdrawer.util.AbstractDrawerImageLoader
 import com.mikepenz.materialdrawer.util.DrawerImageLoader
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
-import onlymash.flexbooru.BuildConfig
 import onlymash.flexbooru.R
-import onlymash.flexbooru.app.Settings.isGoogleSign
-import onlymash.flexbooru.app.Settings.isOrderSuccess
 import onlymash.flexbooru.app.Settings.nightMode
-import onlymash.flexbooru.app.Settings.orderDeviceId
-import onlymash.flexbooru.app.Settings.orderId
 import onlymash.flexbooru.common.di.commonModules
-import onlymash.flexbooru.data.api.OrderApi
-import onlymash.flexbooru.extension.getSignMd5
 import onlymash.flexbooru.okhttp.AndroidCookieJar
 import onlymash.flexbooru.okhttp.CloudflareInterceptor
 import onlymash.flexbooru.okhttp.ProgressInterceptor
 import onlymash.flexbooru.okhttp.RequestHeaderInterceptor
-import onlymash.flexbooru.ui.activity.PurchaseActivity
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
 
@@ -68,6 +57,7 @@ class App : Application(), ImageLoaderFactory {
                 placeholder(ContextCompat.getDrawable(imageView.context, R.drawable.avatar_account))
             }
         }
+
         override fun cancel(imageView: ImageView) {
             imageView.dispose()
         }
@@ -89,98 +79,6 @@ class App : Application(), ImageLoaderFactory {
         }
         AppCompatDelegate.setDefaultNightMode(nightMode)
         DrawerImageLoader.init(drawerImageLoader)
-        if (!isOrderSuccess) {
-            MobileAds.initialize(this) {}
-            MobileAds.setRequestConfiguration(RequestConfiguration.Builder()
-                .setTestDeviceIds(listOf("65DC68D21E774E5B6CAF511768A3E2D2")).build())
-        }
-        if (BuildConfig.DEBUG) {
-            return
-        }
-        checkOrder()
-    }
-
-    private fun checkOrder() {
-        val isPlayVersion = getSignMd5() == "777296a0fe4baa88c783d1cb18bdf1f2"
-        isGoogleSign = isPlayVersion
-        if (isPlayVersion) {
-            val time = System.currentTimeMillis()
-            if (!isOrderSuccess || time - Settings.orderTime > 7*24*60*60*1000) {
-                Settings.orderTime = time
-                checkOrderFromCache()
-            }
-        } else {
-            val id = orderId
-            if (id.isNullOrEmpty()) {
-                isOrderSuccess = false
-            } else {
-                MainScope().launch {
-                    OrderApi.orderChecker(id, orderDeviceId)
-                }
-            }
-        }
-    }
-
-    private fun checkOrderFromCache() {
-        val billingClient = BillingClient
-            .newBuilder(this)
-            .enablePendingPurchases()
-            .setListener { _, _ ->  }
-            .build()
-        billingClient.startConnection(object : BillingClientStateListener {
-            override fun onBillingSetupFinished(billingResult: BillingResult) {
-                if (billingResult.responseCode ==  BillingClient.BillingResponseCode.OK) {
-                    queryPurchases(billingClient)
-                }
-            }
-            override fun onBillingServiceDisconnected() {
-                billingClient.endConnection()
-            }
-        })
-    }
-
-    private fun queryPurchases(billingClient: BillingClient) {
-        val queryPurchasesParams = QueryPurchasesParams.newBuilder()
-            .setProductType(BillingClient.ProductType.INAPP)
-            .build()
-        billingClient.queryPurchasesAsync(queryPurchasesParams) { _, purchases ->
-            val success = if (purchases.isEmpty()) {
-                false
-            } else {
-                val index = purchases.indexOfFirst {
-                    it.products[0] == PurchaseActivity.SKU && it.purchaseState == Purchase.PurchaseState.PURCHASED
-                }
-                if (index >= 0) {
-                    val purchase = purchases[index]
-                    if (!purchase.isAcknowledged) {
-                        val ackParams = AcknowledgePurchaseParams.newBuilder()
-                            .setPurchaseToken(purchase.purchaseToken)
-                            .build()
-                        billingClient.acknowledgePurchase(ackParams){}
-                    }
-                    true
-                } else false
-            }
-            if (success) {
-                isOrderSuccess = true
-            } else {
-                queryPurchasesHistory(billingClient)
-            }
-        }
-    }
-
-    private fun queryPurchasesHistory(billingClient: BillingClient) {
-        MainScope().launch {
-            val queryPurchaseHistoryParams = QueryPurchaseHistoryParams.newBuilder()
-                .setProductType(BillingClient.ProductType.INAPP)
-                .build()
-            val result = billingClient.queryPurchaseHistory(queryPurchaseHistoryParams)
-            isOrderSuccess = if (result.billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
-                !result.purchaseHistoryRecordList.isNullOrEmpty()
-            } else {
-                false
-            }
-        }
     }
 
     override fun newImageLoader(): ImageLoader {
